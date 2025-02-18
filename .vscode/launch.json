@@ -1,0 +1,15 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "cppvsdbg",
+            "request": "launch",
+            "name": "Debug",
+            "program": "${workspaceFolder}/build/lime.exe",
+            "args": [],
+            "cwd": "${workspaceFolder}",
+            "preLaunchTask": "ninja-build",
+            "externalConsole": true
+        }
+    ]
+}

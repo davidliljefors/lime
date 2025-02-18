@@ -1,5 +1,7 @@
 #pragma once
 
+#include <malloc.h>
+
 using u8 = unsigned char;
 using u32 = unsigned int;
 using u64 = unsigned long long;
@@ -42,12 +44,12 @@ enum ControlByte : u8
 
 inline void* st_alloc(u64 sz)
 {
-	return malloc(sz);
+	return ::malloc(sz);
 }
 
 inline void st_free(void* mem)
 {
-	free(mem);
+	::free(mem);
 }
 
 template<typename T>

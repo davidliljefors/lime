@@ -13,6 +13,8 @@ file(GLOB_RECURSE SOURCES "src/*.cpp" "src/*.h")
 # Add the executable
 add_executable(lime ${SOURCES})
 
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
 # Set the output directory
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/build)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/build)

@@ -2,6 +2,7 @@
 
 #include <cstdlib>
 #include <cstring>
+#include <new>
 
 #define interface struct
 
@@ -13,7 +14,7 @@ interface Allocator
 	virtual ~Allocator() = default;
 
 	virtual void* alloc(i32 size) = 0;
-	virtual void free(void* block) = 0;
+	virtual void free(void* block, i32 size) = 0;
 };
 
 class MallocAllocator : public Allocator
@@ -27,7 +28,7 @@ public:
 		return ::malloc(size);
 	}
 
-	void free(void* block) override
+	void free(void* block, i32 size) override
 	{
 		return ::free(block);
 	}
@@ -41,20 +42,25 @@ public:
 	explicit Array(Allocator& allocator);
 	~Array();
 
-	void push_back(const T& val);
+	void push_back(T val);
+
+	void* push_back_uninit();
 
 	void resize(i32 new_size);
 	void reserve(i32 new_capacity);
+
+	void clear();
 
 	T& operator[](i32 i);
 	const T& operator[](i32 i) const;
 
 
+	i32 size() const { return m_size; }
+
 	T* begin();
 	T* end();
 
 private:
-	void destroy(i32 i);
 	void grow();
 private:
 	Allocator& m_allocator;
@@ -76,12 +82,12 @@ Array<T>::~Array()
 {
 	for (i32 i = 0; i < m_size; ++i)
 	{
-		destroy(i);
+		m_data[i].~T();
 	}
 
 	if (m_data)
 	{
-		m_allocator.free(m_data);
+		m_allocator.free(m_data, m_capacity * sizeof(T));
 	}
 
 	m_capacity = 0;
@@ -89,22 +95,81 @@ Array<T>::~Array()
 }
 
 template <typename T>
-void Array<T>::push_back(const T& val)
+void Array<T>::push_back(T val)
 {
 	if (m_size == m_capacity)
 		grow();
 
-	m_data[m_size++] = val;
+	new (&m_data[m_size]) T(val);
+	++m_size;
+}
+
+template <typename T>
+void* Array<T>::push_back_uninit()
+{
+	if (m_size == m_capacity)
+		grow();
+
+	return &m_data[m_size++];
 }
 
 template <typename T>
 void Array<T>::resize(i32 new_size)
 {
+	if (new_size > m_capacity)
+	{
+		reserve(new_size);
+	}
+
+	if (new_size > m_size)
+	{
+		for (i32 i = m_size; i < new_size; ++i)
+		{
+			new (&m_data[i]) T();
+		}
+	}
+	else if (new_size < m_size)
+	{
+		for (i32 i = new_size; i < m_size; ++i)
+		{
+			m_data[i].~T();	
+		}
+	}
+
+	m_size = new_size;
 }
 
 template <typename T>
 void Array<T>::reserve(i32 new_capacity)
 {
+	if (new_capacity > m_capacity)
+	{
+		T* new_data = (T*)m_allocator.alloc(sizeof(T) * new_capacity);
+
+		if (m_size > 0)
+		{
+			memcpy(new_data, m_data, sizeof(T) * m_size);
+		}
+
+		if(m_data)
+		{
+			m_allocator.free(m_data, sizeof(T) * m_capacity);
+		}
+
+		m_data = new_data;
+		m_capacity = new_capacity;
+	}
+}
+
+template <typename T>
+void Array<T>::clear()
+{
+	for (i32 i = 0; i < m_size; ++i)
+	{
+		m_data[i].~T();
+	}
+
+	m_size = 0;
 }
 
 template <typename T>
@@ -132,12 +197,6 @@ T* Array<T>::end()
 }
 
 template <typename T>
-void Array<T>::destroy(i32 i)
-{
-	m_data[i].~T();
-}
-
-template <typename T>
 void Array<T>::grow()
 {
 	i32 new_capacity = m_capacity <= 8 ? 16 : (m_capacity * 2);
@@ -148,8 +207,10 @@ void Array<T>::grow()
 	{
 		memcpy(new_data, m_data, sizeof(T) * m_size);
 	}
-
-	m_allocator.free(m_data);
+	if(m_data)
+	{
+		m_allocator.free(m_data, sizeof(T) * m_capacity);
+	}
 	m_data = new_data;
 	m_capacity = new_capacity;
 }

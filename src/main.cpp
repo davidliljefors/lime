@@ -1,59 +1,41 @@
-#include <chrono>
-#include <cstdio>
-#include <string>
-#include <unordered_map>
-
-#include "HashMap.h"
+#include "Array.h"
 #include "SwissTable.h"
 
 struct Test
 {
-	std::string name;
+	const char* name;
 	int health;
 };
-
-#define PROFILE_SCOPE(name) \
-    auto start##name = std::chrono::high_resolution_clock::now(); \
-    struct ProfileScope##name { \
-        const char* scopeName; \
-        decltype(start##name) startTime; \
-        ProfileScope##name(const char* name, decltype(start##name) start) \
-            : scopeName(name), startTime(start) {} \
-        ~ProfileScope##name() { \
-            auto end = std::chrono::high_resolution_clock::now(); \
-            double duration = std::chrono::duration<double, std::milli>(end - startTime).count(); \
-            printf("[%s] Execution Time: %.2f ms\n", scopeName, duration); \
-        } \
-    } profileScopeInstance##name(#name, start##name);
-
 
 //constexpr const char* test_string = "kort strong";
 constexpr const char* test_string = "long streng som moste allokere minne";
 
 
-auto fill_hash(int n)
-{
-	hashtable::Hashtable<Test> hash;
+// auto fill_hash(int n)
+// {
+// 	hashtable::Hashtable<Test> hash;
 
-	for (int i = 0; i < n;++i)
-	{
-		hashtable::insert(hash, i, Test{test_string, i});
-	}
+// 	for (int i = 0; i < n;++i)
+// 	{
+// 		hashtable::insert(hash, i, Test{test_string, i});
+// 	}
 
-	return hash;
-}
+// 	return hash;
+// }
 
-auto fill_unordered(int n)
-{
-	std::unordered_map<u64, Test> hash;
 
-	for (int i = 0; i < n;++i)
-	{
-		hash[i] = Test{test_string, i};
-	}
 
-	return hash;
-}
+// auto fill_unordered(int n)
+// {
+// 	std::unordered_map<u64, Test> hash;
+
+// 	for (int i = 0; i < n;++i)
+// 	{
+// 		hash[i] = Test{test_string, i};
+// 	}
+
+// 	return hash;
+// }
 
 
 auto fill_swiss(int n)
@@ -68,25 +50,25 @@ auto fill_swiss(int n)
 	return hash;
 }
 
-auto accumulate_hash(const hashtable::Hashtable<Test>& in)
-{
-	u64 sum = 0;
-	for (auto& v : in.data)
-	{
-		sum += v.value.health + strlen(v.value.name.c_str());;
-	}
-	return sum;
-}
+// auto accumulate_hash(const hashtable::Hashtable<Test>& in)
+// {
+// 	u64 sum = 0;
+// 	for (auto& v : in.data)
+// 	{
+// 		sum += v.value.health + strlen(v.value.name.c_str());;
+// 	}
+// 	return sum;
+// }
 
-auto accumulate_unordered(const std::unordered_map<u64, Test>& in)
-{
-	u64 sum = 0;
-	for (auto& v : in)
-	{
-		sum += v.second.health + strlen(v.second.name.c_str());
-	}
-	return sum;
-}
+// auto accumulate_unordered(const std::unordered_map<u64, Test>& in)
+// {
+// 	u64 sum = 0;
+// 	for (auto& v : in)
+// 	{
+// 		sum += v.second.health + strlen(v.second.name.c_str());
+// 	}
+// 	return sum;
+// }
 
 auto accumulate_swiss(const SwissTable<Test>& in)
 {
@@ -96,39 +78,39 @@ auto accumulate_swiss(const SwissTable<Test>& in)
 		if (in.control[i] != DELETED && in.control[i] != EMPTY)
 		{
 			auto& v = in.data[i];
-			sum += v.value.health + strlen(v.value.name.c_str());
+			sum += v.value.health + strlen(v.value.name);
 		}
 	}
 	return sum;
 }
 
-auto accumulate_unordered_rand(const std::unordered_map<u64, Test>& in)
-{
-	u64 sum = 0;
+// auto accumulate_unordered_rand(const std::unordered_map<u64, Test>& in)
+// {
+// 	u64 sum = 0;
 
-	srand(0);
+// 	srand(0);
 
-	for (int i = 0; i < 1000000; ++i)
-	{
-		sum += in.find(rand()*10)->second.health;
-	}
+// 	for (int i = 0; i < 1000000; ++i)
+// 	{
+// 		sum += in.find(rand()*10)->second.health;
+// 	}
 	
-	return sum;
-}
+// 	return sum;
+// }
 
-auto accumulate_hash_rand(hashtable::Hashtable<Test>& in)
-{
-	u64 sum = 0;
+// auto accumulate_hash_rand(hashtable::Hashtable<Test>& in)
+// {
+// 	u64 sum = 0;
 
-	srand(0);
+// 	srand(0);
 
-	for (int i = 0; i < 1000000; ++i)
-	{
-		sum += in.data[findImpl(in, rand()*10).dataIndex].value.health;
-	}
+// 	for (int i = 0; i < 1000000; ++i)
+// 	{
+// 		sum += in.data[findImpl(in, rand()*10).dataIndex].value.health;
+// 	}
 	
-	return sum;
-}
+// 	return sum;
+// }
 
 auto accumulate_swiss_rand(SwissTable<Test>& in)
 {
@@ -156,16 +138,16 @@ void copy_swiss(SwissTable<Test>& in)
 }
 
 
-void copy_unordered(std::unordered_map<u64, Test>& in)
-{
-	std::unordered_map<u64, Test> v;
-	for (int i = 0; i < 1; ++i)
-	{
-		v = in;
-	}
+// void copy_unordered(std::unordered_map<u64, Test>& in)
+// {
+// 	std::unordered_map<u64, Test> v;
+// 	for (int i = 0; i < 1; ++i)
+// 	{
+// 		v = in;
+// 	}
 
-	in = v;
-}
+// 	in = v;
+// }
 
 
 bool testSwissTable() {
@@ -196,25 +178,88 @@ bool testSwissTable() {
     if (!table.find(2) || *table.find(2) != 500) return false;
 
     // Bulk Insert and Find
-    for (uint64_t i = 10; i < 30; ++i) {
+    for (u64 i = 10; i < 30; ++i) {
         table.insert(i, static_cast<int>(i * 10));
     }
-    for (uint64_t i = 10; i < 30; ++i) {
+    for (u64 i = 10; i < 30; ++i) {
         if (!table.find(i) || *table.find(i) != static_cast<int>(i * 10)) return false;
     }
 
     // Bulk Erase and Check
-    for (uint64_t i = 10; i < 20; ++i) {
+    for (u64 i = 10; i < 20; ++i) {
         table.erase(i);
     }
-    for (uint64_t i = 10; i < 20; ++i) {
+    for (u64 i = 10; i < 20; ++i) {
         if (table.find(i) != nullptr) return false;
     }
-    for (uint64_t i = 20; i < 30; ++i) {
+    for (u64 i = 20; i < 30; ++i) {
         if (!table.find(i) || *table.find(i) != static_cast<int>(i * 10)) return false;
     }
 
     return true;
+}
+
+bool testArray(Allocator& a)
+{
+	Array<int> arr(a);
+	arr.push_back(1);
+	arr.push_back(2);
+	arr.push_back(3);
+
+	if (arr[0] != 1) return false;
+	if (arr[1] != 2) return false;
+	if (arr[2] != 3) return false;
+
+	arr.push_back(4);
+	arr.push_back(5);
+	arr.push_back(6);
+
+	if (arr[3] != 4) return false;
+	if (arr[4] != 5) return false;
+	if (arr[5] != 6) return false;
+
+	arr.resize(3);
+
+	if (arr[0] != 1) return false;
+	if (arr[1] != 2) return false;
+	if (arr[2] != 3) return false;
+
+	arr.reserve(10);
+
+	if (arr[0] != 1) return false;
+	if (arr[1] != 2) return false;
+	if (arr[2] != 3) return false;
+
+
+	int c = 1;
+	for(int i : arr)
+	{
+		if (i != c) return false;
+		++c;
+	}
+
+	if(c != 4) return false;
+
+	arr.clear();
+
+	for(int i = 0; i < 1000; ++i)
+	{
+		arr.push_back(i);
+	}
+
+	if(arr.size() != 1000) return false;
+
+	int sum = 0;
+	for(int i : arr)
+	{
+		sum += i;
+	}
+
+	if(sum != 499500) return false;
+
+	if(arr.size() != 0) return false;
+
+	return true;
 }
 
 void flush()
@@ -228,72 +273,10 @@ void flush()
 
 int main()
 {
-
+	MallocAllocator ma;
 	testSwissTable();
-	//hashtable::Hashtable<Test> h;
-	std::unordered_map<u64, Test> u;
-	SwissTable<Test> s;
+	testArray(ma);
 
-	{
-		PROFILE_SCOPE(fill_1m_elems_std_unordered);
-		u = fill_unordered(1000000);
-	}
-
-	//{
-	//	PROFILE_SCOPE(fill_1m_elems_hash);
-	//	h = fill_hash(1000000);
-	//}
-
-	flush();
-
-	{
-		PROFILE_SCOPE(fill_1m_elems_swiss);
-		s = fill_swiss(1000000);
-	}
-
-	flush();
-
-	{
-		PROFILE_SCOPE(copy_unord);
-		copy_unordered(u);
-	}
-
-	flush();
-
-	{
-		PROFILE_SCOPE(copy_swiss);
-		copy_swiss(s);
-	}
-
-	flush();
-
-	{
-		PROFILE_SCOPE(test_accum_all_swiss);
-		printf("accumu swiss %llu", accumulate_swiss(s));
-	}
-
-	flush();
-
-	{
-		PROFILE_SCOPE(test_accum_all_unordered);
-		printf("accumu hash %llu", accumulate_unordered(u));
-	}
-
-	flush();
-
-	{
-		PROFILE_SCOPE(test_random_Access);
-		printf("random access swiss %llu", accumulate_swiss_rand(s));
-	}
-
-	flush();
-	{
-		PROFILE_SCOPE(test_random_access);
-		printf("random access unord %llu", accumulate_unordered_rand(u));
-	}
-
-
-	
 
 }
 
