@@ -1,8 +1,10 @@
 #pragma once
 
-// #define BF_ASSERT(cond) do { bf::assertions::do_assert(cond); } while (false)
-
-// namespace bf::assertions
-// {
-// void do_assert(bool cond);
-// }
+using u8 = unsigned char;
+using u16 = unsigned short;
+using u32 = unsigned int;
+using u64 = unsigned long long;
+using i8 = char;
+using i16 = short;
+using i32 = int;
+using i64 = long long;

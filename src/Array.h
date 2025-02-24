@@ -43,6 +43,7 @@ public:
 	~Array();
 
 	void push_back(T val);
+	T& back();
 
 	void* push_back_uninit();
 
@@ -102,6 +103,12 @@ void Array<T>::push_back(T val)
 
 	new (&m_data[m_size]) T(val);
 	++m_size;
+}
+
+template <typename T>
+T& Array<T>::back()
+{
+	return m_data[m_size-1];
 }
 
 template <typename T>
@@ -199,7 +206,7 @@ T* Array<T>::end()
 template <typename T>
 void Array<T>::grow()
 {
-	i32 new_capacity = m_capacity <= 8 ? 16 : (m_capacity * 2);
+	i32 new_capacity = m_capacity < 1 ? 1 : (m_capacity * 2);
 	
 	T* new_data = (T*)m_allocator.alloc(sizeof(T) * new_capacity);
 

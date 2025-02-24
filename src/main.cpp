@@ -1,5 +1,9 @@
+#include <cstdio>
+
 #include "Array.h"
 #include "SwissTable.h"
+#include "ScratchAllocator.h"
+#include "Timer.h"
 
 struct Test
 {
@@ -9,33 +13,6 @@ struct Test
 
 //constexpr const char* test_string = "kort strong";
 constexpr const char* test_string = "long streng som moste allokere minne";
-
-
-// auto fill_hash(int n)
-// {
-// 	hashtable::Hashtable<Test> hash;
-
-// 	for (int i = 0; i < n;++i)
-// 	{
-// 		hashtable::insert(hash, i, Test{test_string, i});
-// 	}
-
-// 	return hash;
-// }
-
-
-
-// auto fill_unordered(int n)
-// {
-// 	std::unordered_map<u64, Test> hash;
-
-// 	for (int i = 0; i < n;++i)
-// 	{
-// 		hash[i] = Test{test_string, i};
-// 	}
-
-// 	return hash;
-// }
 
 
 auto fill_swiss(int n)
@@ -49,26 +26,6 @@ auto fill_swiss(int n)
 
 	return hash;
 }
-
-// auto accumulate_hash(const hashtable::Hashtable<Test>& in)
-// {
-// 	u64 sum = 0;
-// 	for (auto& v : in.data)
-// 	{
-// 		sum += v.value.health + strlen(v.value.name.c_str());;
-// 	}
-// 	return sum;
-// }
-
-// auto accumulate_unordered(const std::unordered_map<u64, Test>& in)
-// {
-// 	u64 sum = 0;
-// 	for (auto& v : in)
-// 	{
-// 		sum += v.second.health + strlen(v.second.name.c_str());
-// 	}
-// 	return sum;
-// }
 
 auto accumulate_swiss(const SwissTable<Test>& in)
 {
@@ -84,34 +41,7 @@ auto accumulate_swiss(const SwissTable<Test>& in)
 	return sum;
 }
 
-// auto accumulate_unordered_rand(const std::unordered_map<u64, Test>& in)
-// {
-// 	u64 sum = 0;
-
-// 	srand(0);
-
-// 	for (int i = 0; i < 1000000; ++i)
-// 	{
-// 		sum += in.find(rand()*10)->second.health;
-// 	}
 	
-// 	return sum;
-// }
-
-// auto accumulate_hash_rand(hashtable::Hashtable<Test>& in)
-// {
-// 	u64 sum = 0;
-
-// 	srand(0);
-
-// 	for (int i = 0; i < 1000000; ++i)
-// 	{
-// 		sum += in.data[findImpl(in, rand()*10).dataIndex].value.health;
-// 	}
-	
-// 	return sum;
-// }
-
 auto accumulate_swiss_rand(SwissTable<Test>& in)
 {
 	u64 sum = 0;
@@ -136,19 +66,6 @@ void copy_swiss(SwissTable<Test>& in)
 
 	in = v;
 }
-
-
-// void copy_unordered(std::unordered_map<u64, Test>& in)
-// {
-// 	std::unordered_map<u64, Test> v;
-// 	for (int i = 0; i < 1; ++i)
-// 	{
-// 		v = in;
-// 	}
-
-// 	in = v;
-// }
-
 
 bool testSwissTable() {
     SwissTable<int> table;
@@ -262,22 +179,60 @@ bool testArray(Allocator& a)
 	return true;
 }
 
-void flush()
+void fill_array_and_sum(Array<Array<char>>& arr, Allocator& a)
 {
-	int cache_sz = 200000000;
-	char* mem = (char*)malloc(cache_sz);
-	memset(mem, 1, cache_sz);
+	for (int i = 0; i < 100000; ++i)
+	{
+		arr.push_back(Array<char>(a));
 
-	free(mem);
+		auto& ins = arr.back();
+
+		for (int ii = 0; ii < rand() % 1000; ++ii)
+		{
+			ins.push_back('a' + ii);
+		}
+	}
 }
+
+
 
 int main()
 {
 	MallocAllocator ma;
-	testSwissTable();
-	testArray(ma);
+	puts("Init memory");
+	block_memory_init();
+	{
+		Timer t;
+		timer_init(&t);
 
+		
+		for (int i = 0; i < 1; ++i)
+		{
+			timer_start(&t);
+			{
+				Array<Array<char>> arra(ma);
+				fill_array_and_sum(arra, ma);
+			}
+			timer_elapsed_ms(&t);
+			printf("Fill array malloc took %f ms\n", timer_elapsed_ms(&t));
 
+			timer_start(&t);
+			{
+				ScratchPadAllocator sa;
+				void* t1 = sa.alloc(Block::BLOCK_SIZE / 2);
+				void* t2 = sa.alloc(Block::BLOCK_SIZE / 2);
+				/*using Str = Array<Array<char>>;
+				Array<Array<char>>* arrb = new(sa.alloc(sizeof(Str))) Str(sa);
+				fill_array_and_sum(*arrb, sa);*/
+			}
+			timer_elapsed_ms(&t);
+			printf("Fill array scratch took %f ms\n", timer_elapsed_ms(&t));
+		}
+	}
+
+	puts("shutting down memory");
+	block_memory_shutdown();
+	puts("memory shutdown");
 }
 
 
